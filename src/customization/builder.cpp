@@ -25,7 +25,10 @@ int main(int, char **argv) {
 
 	Util::Timer timer;
 	graph.build(edgeData);
-	std::cout << timer.elapsedMilliseconds();
+	std::cout << timer.elapsedMilliseconds() << ",";
+	timer.restart();
+	graph.generateMetaInformation();
+	std::cout << timer.elapsedMilliseconds() << "\n";
 
 	IOUtils::writeFile(argv[2], [&] (std::ofstream &file) {
 		graph.write(file);

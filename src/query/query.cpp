@@ -4,7 +4,7 @@
 #include "util/io.h"
 #include "util/random.h"
 #include "graph.h"
-#include "ch_query.h"
+#include "weakch_query.h"
 
 using namespace Query;
 
@@ -12,7 +12,8 @@ using namespace Query;
  * Running (a lot of) queries
  *
  * First parameter: binary file containing the precomputed graph
- * Second parameter: name of the file where the query statistics should be written into
+ * Second parameter: file containing the elimnation tree (only for weak query)
+ * Third parameter: name of the file where the query statistics should be written into
  */
 int main(int, char **argv) {
 	Graph graph;
@@ -21,8 +22,17 @@ int main(int, char **argv) {
 		graph.read(file);
 	}, std::ios::binary);
 
-    IOUtils::writeFile(argv[2], [&] (std::ofstream &log) {
-		CHQuery algorithm(graph, log);
+    std::vector<int> eliminationTreeData(graph.nodeCount());
+    IOUtils::openFile(argv[2], [&eliminationTreeData] (std::ifstream &f) {
+		int i = 0;
+		int parent;
+		while(f >> parent) {
+			eliminationTreeData[i++] = parent;
+		}
+	});
+
+    IOUtils::writeFile(argv[3], [&] (std::ofstream &log) {
+		WeakCHQuery algorithm(graph, eliminationTreeData, log);
 
 		Util::Random random(1372074269);
 		for (int i = 0; i < 10000; ++i) {

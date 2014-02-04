@@ -29,6 +29,7 @@ Or, of course, you can also read my thesis - just contact me and I'll send you t
 * Acquire a node order with `ndmetis`.
 * Apply this order to the initial file using the appy_order script - the result is what you will use for all later steps.
 * Contract the graph using the `contraction` programm - this is the metric independent preprocessing.
+* Generate the elemination tree using `undirected_contraction`
 * Generate the macrocode (and the binary graph file) for the customization phase - `buildmacrocode`
 * Introduce a metric with `macrocustomization` - your DIMACs file contains one but make sure to use the reordered file.
 * Run superfast queries on the result of the customization (`queries`) - HOORAY
@@ -38,6 +39,7 @@ Or, of course, you can also read my thesis - just contact me and I'll send you t
 Each programm has a (little) more documentation in its source file.
 
 * `contraction` (`contraction/contraction.cpp`) contracts the given graph. This is the metric independent preprocessing.
+* `undirected_contraction` (`contraction/undirected_contraction.cpp`) contracts the given graph as if every arc was an edge (only neccessary for weak query).
 * `buildmacrocode` (`contraction/macro.cpp`) generates a macroinstruction file for the customization (and the file for the graph without metric).
 * `macrocustomization` (`customization/macro_customization.cpp`) introduces an arbitrary metric to a preprocessed graph (using macrocode) and generates a graph ready for fast queries.
 * `delta` (`customization/delta.cpp`) reorders arcs due to changes in the metric and recustomization (only neccessary for weak query).

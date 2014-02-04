@@ -16,7 +16,7 @@ int main(int, char **argv) {
 	customization.applyMetric(argv[3]);
 	customization.exportGraph(argv[4]);
 
-	// changing arc weights
+	// changing some arc weights - comment out the above export if you want to use this - the arc reordering will break the macroinstructions
 	// IOUtils::writeFile(argv[5], [&] (std::ofstream &stats) {
 	// 	stats << "recustomization_in_ms\n";
 	// 	Util::Random random(1372074269);
@@ -29,6 +29,14 @@ int main(int, char **argv) {
 	// 		Common::Tools::Timer timer;
 	// 		customization.change(from, edge.target, random.getRandomInt(edge.weight * 2) + 1); // no zero edges
 	// 		stats << timer.ElapsedMilliseconds() << "\n";
+
+	// 		IOUtils::writeFile("changes/" + std::to_string(i), [&] (std::ofstream &file) {
+	// 			for (auto arc : customization.getChanges()) {
+	// 				const Query::Edge &edge = customization.getGraph().getEdge(arc.first, arc.second);
+	// 				assert(edge.weight != INT_MAX);
+	// 				file << "a " << arc.first << " " << arc.second << " " << edge.weight << " " << edge.reason << "\n";
+	// 			}
+	// 		});
 	// 	}
 	// });
 }

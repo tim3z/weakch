@@ -27,6 +27,8 @@ private:
 
 	int uncontraced;
 
+	std::vector<std::pair<int, int>> changes;
+
 public:
 
 	MacroCustomization(const std::string graphFile, const std::string instructionsFile, const int uncontraced = 0) : baseGraph(graphFile), dirty(false), uncontraced(uncontraced) {
@@ -77,7 +79,13 @@ public:
 		#endif
 	}
 
+	const std::vector<std::pair<int, int>>& getChanges() {
+		return changes;
+	}
+
 	void change(const int from, const int to, const int newWeight) {
+		changes.clear();
+
 		Query::Edge &edge = graph.getEdge(from, to);
 		if (edge.weight > newWeight) {
 			decrease(from, to, newWeight);
@@ -93,6 +101,8 @@ private:
 
 	void decrease(const int from, const int to, const int newWeight) {
 		graph.setWeight(from, to, newWeight);
+		changes.push_back(std::make_pair (from,to));
+
 		Container::KHeap<2, int> queue(graph.nodeCount());
 		int node = from < to ? from : to;
 		
@@ -100,11 +110,15 @@ private:
 
 		while(!queue.Empty()) {
 			queue.ExtractMin(node, node);
-			forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge) {
+			forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge, int backward) {
 				int sum = inEdge.weight + outEdge.weight;
 	    		if (sum < edge.weight) {
 					edge.weight = sum;
 					edge.reason = node;
+					Query::Edge &incomingEdge = graph.getIncomingEdge(backward);
+					incomingEdge.weight = sum;
+					incomingEdge.reason = node;
+					changes.push_back(std::make_pair (inEdge.target, outEdge.target));
 
 					int lowest = outEdge.target < inEdge.target ? outEdge.target : inEdge.target;
 					queue.Update(lowest, lowest);
@@ -115,6 +129,7 @@ private:
 
 	void increase(const int from, const int to, const int newWeight) {
 		graph.setWeight(from, to, newWeight);
+		changes.push_back(std::make_pair (from,to));
 		int min = from < to ? from : to;
 
 		Container::KHeap<2, int> changedEdgesLowerEnds(graph.nodeCount());
@@ -129,10 +144,14 @@ private:
 			int node;
 			changedEdgesLowerEnds.ExtractMin(node, node);
 
-			forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge) {
+			forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge, int backward) {
         		if (edge.reason == node) {
 					edge.weight = edge.originalWeight;
 					edge.reason = -1;
+					Query::Edge &incomingEdge = graph.getIncomingEdge(backward);
+					incomingEdge.weight = edge.originalWeight;
+					incomingEdge.reason = -1;
+					changes.push_back(std::make_pair (inEdge.target, outEdge.target));
 
 					min = inEdge.target < outEdge.target ? inEdge.target : outEdge.target;
 					changedEdgesLowerEnds.Update(min, min);
@@ -153,11 +172,21 @@ private:
 	}
 
 	inline void customize(const int node) {
-		forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge) {
+		forEachPotentialShortcut(node, [&] (Query::Edge &inEdge, Query::Edge &outEdge, Query::Edge &edge, int backward) {
 			int sum = inEdge.weight + outEdge.weight;
     		assert(inEdge.weight != INT_MAX);
 			assert(outEdge.weight != INT_MAX);
     		if (sum < edge.weight) {
+				Query::Edge &incomingEdge = graph.getIncomingEdge(backward);
+				assert(edge.weight == incomingEdge.weight);
+				assert(edge.originalWeight == incomingEdge.originalWeight);
+				assert(edge.reason == incomingEdge.reason);
+
+				incomingEdge.weight = sum;
+				incomingEdge.reason = node;
+
+				assert(edge.target == outEdge.target);
+				assert(incomingEdge.target == inEdge.target);
 				edge.weight = sum;
 				edge.reason = node;
 			}
@@ -172,16 +201,10 @@ private:
 	        for (int source : in[node]) {
 	        	Query::Edge &inEdge = graph.getIncomingEdge(source);
 	        	if (outEdge.target != inEdge.target) {
-        			Query::Edge * edge;
-    				int e = indices[node][i++];
-        			if (inEdge.target < outEdge.target) {
-        				edge = &graph.getEdge(e);
-        				assert(outEdge.target == edge->target);
-        			} else {
-        				edge = &graph.getIncomingEdge(e);
-        				assert(inEdge.target == edge->target);
-        			}
-        			f(inEdge, outEdge, *edge);
+	        		int forward = indices[node][i++];
+	        		int backward = indices[node][i++];
+	        		assert(outEdge.target == graph.getEdge(forward).target);
+	        		f(inEdge, outEdge, graph.getEdge(forward), backward);
 	        	}
 	        }
 	    }
@@ -190,6 +213,10 @@ private:
 public:
 
 	void exportGraph(const std::string targetFile) {
+		Util::Timer timer;
+		graph.generateMetaInformation();
+		std::cout << "meta generation took " << timer.elapsedMilliseconds() / 1000 << "s\n";
+
 		IOUtils::writeFile(targetFile, [&] (std::ofstream &file) {
 			graph.write(file);
 		}, std::ios::binary);
@@ -230,6 +257,9 @@ private:
 	                		int forward;
 		                    IOUtils::readElementary(file, forward);
 		                    indices[node].push_back(forward);
+                			int backward;
+		                    IOUtils::readElementary(file, backward);
+		                    indices[node].push_back(backward);
 	                	}
 	                }
 	            }

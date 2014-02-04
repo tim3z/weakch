@@ -80,19 +80,14 @@ int main(int, char **argv) {
             for (int target : out[node]) {
                 for (int source : in[node]) {
                     if (source != target) {
-                        if (source < target) {
-                            int index = graph.getEdgeIndex(source, target);
-                            timer.pause();
-                            IOUtils::writeElementary(file, index);
-                            assert(graph.getEdge(index).target == target);
-                            timer.resume();
-                        } else {
-                            int index = graph.getIncomingEdgeIndex(target, source);
-                            timer.pause();
-                            IOUtils::writeElementary(file, index);   
-                            assert(graph.getIncomingEdge(index).target == source);
-                            timer.resume();
-                        }
+                        int index1 = graph.getEdgeIndex(source, target);
+                        int index2 = graph.getIncomingEdgeIndex(target, source);
+                        timer.pause();
+                        IOUtils::writeElementary(file, index1);
+                        assert(graph.getEdge(index1).target == target);
+                        IOUtils::writeElementary(file, index2);
+                        assert(graph.getIncomingEdge(index2).target == source);
+                        timer.resume();
                     }
                 }
             }
