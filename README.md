@@ -40,7 +40,6 @@ Each programm has a (little) more documentation in its source file.
 * `contraction` (`contraction/contraction.cpp`) contracts the given graph. This is the metric independent preprocessing.
 * `buildmacrocode` (`contraction/macro.cpp`) generates a macroinstruction file for the customization (and the file for the graph without metric).
 * `macrocustomization` (`customization/macro_customization.cpp`) introduces an arbitrary metric to a preprocessed graph (using macrocode) and generates a graph ready for fast queries.
-* `delta` (`customization/delta.cpp`) reorders arcs due to changes in the metric and recustomization (only neccessary for weak query).
 * `builder` (`customization/builder.cpp`) converts a DIMACs .gr graph into the binary graph format of this project.
 * `queries` (`query/query.cpp`) runs (a lot of) random queries on the provided graph.
 
