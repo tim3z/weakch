@@ -5,7 +5,7 @@ The code is a proof-of-concept implementation of a technique called Weak Contrac
 Contraction Hierarchies are an accelleration technique for finding shortest paths on road networks.
 Weak Contraction Hierarchies extend this approch to be able to handle arbitrary arc metrics.
 If you want more details on the theoretical backgrounds of the technique you should probably dig into the existing scientific literature.
-As this implmentation could demonstrate that the technique works quite well research on it continued - you can find the results [here](http://arxiv.org/abs/1402.0402)
+As this implmentation could demonstrate that the technique works quite well research on it continued - you can find the results [here](http://arxiv.org/abs/1402.0402).
 Or, of course, you can also read my thesis - just contact me and I'll send you the PDF.
 
 # The Code
